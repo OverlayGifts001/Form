@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jewels-AI Video Upload</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #progressContainer { width: 100%; background: #ddd; margin-top: 10px; display: none; }
+        #progressBar { width: 0%; height: 20px; background: #4CAF50; text-align: center; color: white; }
+    </style>
+</head>
+<body>
+
+    <h3>Upload Video to Google Drive</h3>
+    <input type="file" id="videoFile" accept="video/*">
+    <button onclick="uploadFile()">Upload Now</button>
+
+    <div id="progressContainer">
+        <div id="progressBar">0%</div>
+    </div>
+    <p id="status"></p>
+
+    <script>
+    function uploadFile() {
+        const fileInput = document.getElementById('videoFile');
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        const progressContainer = document.getElementById('progressContainer');
+
+        if (fileInput.files.length === 0) {
+            alert("Please select a video first!");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        status.innerText = "Processing video...";
+        progressContainer.style.display = 'block';
+
+        reader.onload = function(e) {
+            const base64Data = e.target.result.split(',')[1];
+            const payload = {
+                filename: file.name,
+                fileContent: e.target.result // Sending full DataURL
+            };
+
+            status.innerText = "Uploading to Drive...";
+            progressBar.style.width = "50%"; // Visual feedback
+
+            fetch('https://script.google.com/macros/s/AKfycby59CZkDcBvRT101S9wH72IzCrxr1rNkzED6Ru2HusZn0XVwATp1Vvxfip_VXfjENLjXQ/exec', {
+                method: 'POST',
+                mode: 'no-cors', // Important for Apps Script
+                body: new URLSearchParams(payload)
+            })
+            .then(() => {
+                progressBar.style.width = "100%";
+                progressBar.innerText = "Done!";
+                status.innerText = "Success! Check your Google Drive folder.";
+                fileInput.value = ""; // Reset
+            })
+            .catch(err => {
+                status.innerText = "Error: " + err;
+                console.error(err);
+            });
+        };
+
+        reader.readAsDataURL(file);
+    }
+    </script>
+</body>
+</html>
