@@ -1,71 +1,58 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Jewels-AI Video Upload</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        #progressContainer { width: 100%; background: #ddd; margin-top: 10px; display: none; }
-        #progressBar { width: 0%; height: 20px; background: #4CAF50; text-align: center; color: white; }
-    </style>
-</head>
-<body>
+<div style="max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px;">
+    <h3>Jewels-AI Upload</h3>
+    
+    <label>Customer/Folder Name:</label><br>
+    <input type="text" id="folderName" placeholder="Enter Folder Name" required style="width: 100%; margin-bottom: 10px;"><br>
+    
+    <label>Select Video:</label><br>
+    <input type="file" id="videoFile" accept="video/*" required style="width: 100%; margin-bottom: 20px;"><br>
+    
+    <button onclick="uploadFile()" id="submitBtn" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">Upload Now</button>
+    
+    <p id="status" style="margin-top: 15px; font-weight: bold;"></p>
+</div>
 
-    <h3>Upload Video to Google Drive</h3>
-    <input type="file" id="videoFile" accept="video/*">
-    <button onclick="uploadFile()">Upload Now</button>
+<script>
+function uploadFile() {
+    const folderInput = document.getElementById('folderName').value;
+    const fileInput = document.getElementById('videoFile');
+    const status = document.getElementById('status');
+    const btn = document.getElementById('submitBtn');
 
-    <div id="progressContainer">
-        <div id="progressBar">0%</div>
-    </div>
-    <p id="status"></p>
+    if (!folderInput || fileInput.files.length === 0) {
+        alert("Please enter a folder name and select a file!");
+        return;
+    }
 
-    <script>
-    function uploadFile() {
-        const fileInput = document.getElementById('videoFile');
-        const status = document.getElementById('status');
-        const progressBar = document.getElementById('progressBar');
-        const progressContainer = document.getElementById('progressContainer');
+    const file = fileInput.files[0];
+    const reader = new FileReader();
 
-        if (fileInput.files.length === 0) {
-            alert("Please select a video first!");
-            return;
-        }
+    btn.disabled = true;
+    status.innerText = "Preparing upload...";
 
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-
-        status.innerText = "Processing video...";
-        progressContainer.style.display = 'block';
-
-        reader.onload = function(e) {
-            const base64Data = e.target.result.split(',')[1];
-            const payload = {
-                filename: file.name,
-                fileContent: e.target.result // Sending full DataURL
-            };
-
-            status.innerText = "Uploading to Drive...";
-            progressBar.style.width = "50%"; // Visual feedback
-
-            fetch('https://script.google.com/macros/s/AKfycby59CZkDcBvRT101S9wH72IzCrxr1rNkzED6Ru2HusZn0XVwATp1Vvxfip_VXfjENLjXQ/exec', {
-                method: 'POST',
-                mode: 'no-cors', // Important for Apps Script
-                body: new URLSearchParams(payload)
-            })
-            .then(() => {
-                progressBar.style.width = "100%";
-                progressBar.innerText = "Done!";
-                status.innerText = "Success! Check your Google Drive folder.";
-                fileInput.value = ""; // Reset
-            })
-            .catch(err => {
-                status.innerText = "Error: " + err;
-                console.error(err);
-            });
+    reader.onload = function(e) {
+        const payload = {
+            filename: file.name,
+            folderName: folderInput,
+            fileContent: e.target.result
         };
 
-        reader.readAsDataURL(file);
-    }
-    </script>
-</body>
-</html>
+        status.innerText = "Uploading to folder: " + folderInput + "...";
+
+        fetch('YOUR_WEB_APP_URL_HERE', {
+            method: 'POST',
+            mode: 'no-cors', 
+            body: new URLSearchParams(payload)
+        })
+        .then(() => {
+            status.innerText = "Success! Folder '" + folderInput + "' updated.";
+            btn.disabled = false;
+        })
+        .catch(err => {
+            status.innerText = "Error: " + err;
+            btn.disabled = false;
+        });
+    };
+    reader.readAsDataURL(file);
+}
+</script>
