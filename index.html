@@ -1,78 +1,29 @@
-<div style="max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; font-family: sans-serif; text-align: center;">
-    <h3 style="color: #333;">Jewels-AI Video Portal</h3>
-    
-    <div style="text-align: left;">
-        <label>Customer/Folder Name:</label><br>
-        <input type="text" id="folderName" placeholder="Enter Folder Name" required style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">
-        
-        <label>Select Video:</label><br>
-        <input type="file" id="videoFile" accept="video/*" required style="width: 100%; margin-top: 10px; margin-bottom: 20px;">
-    </div>
+<!DOCTYPE html>
+<html>
+  <body>
+    <h3>Product Video Upload</h3>
+    <input type="text" id="productId" placeholder="Enter Product ID" required><br><br>
+    <input type="file" id="videoFile" accept="video/*" required><br><br>
+    <button onclick="processUpload()">Upload</button>
+    <div id="status"></div>
 
-    <button onclick="uploadFile()" id="submitBtn" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">Upload Now</button>
-    
-    <div id="loader" style="display: none; margin-top: 15px;">
-        <div style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 2s linear infinite; margin: auto;"></div>
-        <p>Uploading to Google Drive...</p>
-    </div>
+    <script>
+      function processUpload() {
+        const fileInput = document.getElementById('videoFile');
+        const productId = document.getElementById('productId').value;
+        const status = document.getElementById('status');
 
-    <p id="status" style="margin-top: 15px; font-weight: bold;"></p>
-</div>
+        if (!productId || fileInput.files.length === 0) return alert("Fill all fields");
 
-<style>
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-</style>
-
-<script>
-function uploadFile() {
-    const folderInput = document.getElementById('folderName').value;
-    const fileInput = document.getElementById('videoFile');
-    const status = document.getElementById('status');
-    const btn = document.getElementById('submitBtn');
-    const loader = document.getElementById('loader');
-
-    if (!folderInput || fileInput.files.length === 0) {
-        alert("Please fill in both fields!");
-        return;
-    }
-
-    const file = fileInput.files[0];
-    const reader = new FileReader();
-
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
-    loader.style.display = "block";
-    status.innerText = "";
-
-    reader.onload = function(e) {
-        const payload = {
-            filename: file.name,
-            folderName: folderInput,
-            fileContent: e.target.result
+        status.innerHTML = "Uploading...";
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          google.script.run
+            .withSuccessHandler(msg => status.innerHTML = msg)
+            .uploadVideo({ productId: productId, videoFile: e.target.result });
         };
-
-        // I have used your provided Deployment ID below
-        fetch('https://script.google.com/macros/s/AKfycby59CZkDcBvRT101S9wH72IzCrxr1rNkzED6Ru2HusZn0XVwATp1Vvxfip_VXfjENLjXQ/exec', {
-            method: 'POST',
-            mode: 'no-cors', 
-            body: new URLSearchParams(payload)
-        })
-        .then(() => {
-            loader.style.display = "none";
-            status.style.color = "green";
-            status.innerText = "✔ Success! Saved in folder: " + folderInput;
-            btn.disabled = false;
-            btn.style.opacity = "1";
-            fileInput.value = ""; 
-        })
-        .catch(err => {
-            loader.style.display = "none";
-            status.style.color = "red";
-            status.innerText = "Error: Please check your internet.";
-            btn.disabled = false;
-            btn.style.opacity = "1";
-        });
-    };
-    reader.readAsDataURL(file);
-}
-</script>
+        reader.readAsDataURL(fileInput.files[0]);
+      }
+    </script>
+  </body>
+</html>
